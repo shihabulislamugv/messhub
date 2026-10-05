@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/config/supabase_config.dart';
 import '../models/user_profile.dart';
-import '../services/mock_seed_service.dart';
 
 class AuthRepository {
   static const String _keyProfile = 'messhub_cached_profile';
@@ -30,9 +29,8 @@ class AuthRepository {
       }
     }
 
-    // Default to sandbox user for immediate responsiveness
-    _currentUser = MockSeedService.currentMember;
-    await _saveProfileToCache(_currentUser!);
+    // If no existing cached session or remote auth, leave unauthenticated for clean login/register
+    _currentUser = null;
   }
 
   Future<void> _fetchProfile(String userId) async {
@@ -60,9 +58,11 @@ class AuthRepository {
     }
 
     // Local / Sandbox mode fallback
+    final isDemo = email.toLowerCase() == 'shihab@messhub.app' || email.toLowerCase() == 'demo@messhub.local';
+    final uid = isDemo ? 'user_shihab' : 'user_${email.hashCode.abs()}';
     _currentUser = UserProfile(
-      id: 'user_shihab',
-      name: email.contains('@') ? email.split('@').first : 'User',
+      id: uid,
+      name: isDemo ? 'Shihabul Islam' : (email.contains('@') ? email.split('@').first : 'User'),
       email: email,
       phone: '01711223344',
       createdAt: DateTime.now(),

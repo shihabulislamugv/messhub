@@ -9,6 +9,8 @@ import '../../data/repositories/bill_repository.dart';
 import '../../data/repositories/expense_repository.dart';
 import '../../data/repositories/meal_repository.dart';
 import '../../data/repositories/settlement_repository.dart';
+import '../../data/models/user_profile.dart';
+import '../../data/services/mock_seed_service.dart';
 import '../../domain/calculations/bill_split_validator.dart';
 import '../../domain/calculations/meal_rate_calculator.dart';
 import '../../domain/calculations/balance_calculator.dart';
@@ -139,8 +141,10 @@ class MessProvider extends ChangeNotifier {
       }
     }
 
-    // 3. Member meals count
-    final memberMeals = _mealRepo.getMemberMealTotals(ids);
+    final isDemo = _messRepo.currentMess?.id == MockSeedService.sampleMess.id;
+
+    // 3. Member meals count (pure 0 for real mess, only counts recorded meals)
+    final memberMeals = _mealRepo.getMemberMealTotals(ids, isDemo: isDemo);
 
     // 4. Food & Bazar total
     final totalFood = _expenseRepo.getTotalFoodAndBazarExpense();
@@ -191,6 +195,8 @@ class MessProvider extends ChangeNotifier {
     required int cycleStartDay,
     String? description,
     required String creatorId,
+    String? creatorName,
+    String? creatorEmail,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -202,8 +208,17 @@ class MessProvider extends ChangeNotifier {
         cycleStartDay: cycleStartDay,
         description: description,
         creatorId: creatorId,
+        creatorName: creatorName,
+        creatorEmail: creatorEmail,
       );
       _selectedCycle = _messRepo.activeCycle;
+
+      // Clean start: A brand new mess starts with exactly ZERO meals, ZERO bazar, ZERO bills!
+      _billRepo.clearBills();
+      _expenseRepo.clearExpenses();
+      _mealRepo.clearMeals();
+      _settlementRepo.clearSettlements();
+
       _recalculateFinancials();
       _isLoading = false;
       notifyListeners();
@@ -213,6 +228,46 @@ class MessProvider extends ChangeNotifier {
       _isLoading = false;
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> resetCurrentMessToZero({required UserProfile user}) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final currentName = _messRepo.currentMess?.name ?? 'My Mess';
+      final currentArea = _messRepo.currentMess?.area ?? 'Bangladesh';
+
+      await _messRepo.createMess(
+        name: currentName,
+        area: currentArea,
+        cycleStartDay: 1,
+        description: 'Active shared bachelor mess',
+        creatorId: user.id,
+        creatorName: user.name,
+        creatorEmail: user.email,
+      );
+      _selectedCycle = _messRepo.activeCycle;
+
+      if (_selectedCycle != null) {
+        await _billRepo.clearBillsCache(_selectedCycle!.id);
+        await _expenseRepo.clearExpensesCache(_selectedCycle!.id);
+        await _mealRepo.clearMealsCache(_selectedCycle!.id);
+        await _settlementRepo.clearSettlementsCache(_selectedCycle!.id);
+      }
+
+      _billRepo.clearBills();
+      _expenseRepo.clearExpenses();
+      _mealRepo.clearMeals();
+      _settlementRepo.clearSettlements();
+
+      _recalculateFinancials();
+    } catch (e) {
+      _errorMessage = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 

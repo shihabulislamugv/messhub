@@ -19,8 +19,8 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController(text: 'shihab@messhub.app');
-  final _passwordController = TextEditingController(text: 'password123');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
@@ -182,7 +182,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     isLoading: auth.status == AuthStatus.loading,
                     onPressed: _handleLogin,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      _emailController.text = 'shihab@messhub.app';
+                      _passwordController.text = 'password123';
+                      _handleLogin();
+                    },
+                    icon: const Icon(Icons.science_outlined, size: 18),
+                    label: const Text('Explore Demo Mess (নমুনা মেস দেখুন)'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      side: const BorderSide(color: AppColors.border),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,

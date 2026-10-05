@@ -18,10 +18,10 @@ class CreateMessScreen extends StatefulWidget {
 
 class _CreateMessScreenState extends State<CreateMessScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController(text: 'Swapno Neer (স্বপ্ন নীড়)');
-  final _areaController = TextEditingController(text: 'Mirpur-2, Dhaka');
+  final _nameController = TextEditingController();
+  final _areaController = TextEditingController();
   final _cycleDayController = TextEditingController(text: '1');
-  final _descController = TextEditingController(text: 'Bachelor mess for shared accommodation');
+  final _descController = TextEditingController();
   bool _isLoading = false;
 
   @override
@@ -49,6 +49,8 @@ class _CreateMessScreenState extends State<CreateMessScreen> {
       cycleStartDay: int.tryParse(_cycleDayController.text.trim()) ?? 1,
       description: _descController.text.trim().isEmpty ? null : _descController.text.trim(),
       creatorId: user.id,
+      creatorName: user.name,
+      creatorEmail: user.email,
     );
 
     setState(() => _isLoading = false);

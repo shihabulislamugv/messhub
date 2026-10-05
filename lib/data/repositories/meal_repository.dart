@@ -22,7 +22,8 @@ class MealRepository {
       } catch (_) {}
     }
 
-    if (_meals.isEmpty) {
+    final isDemoMess = messId == MockSeedService.sampleMess.id;
+    if (_meals.isEmpty && isDemoMess) {
       _meals = MockSeedService.getInitialMeals();
       await _saveMealsToCache(cycleId);
     }
@@ -101,35 +102,46 @@ class MealRepository {
     return entry;
   }
 
-  Map<String, double> getMemberMealTotals(List<String> memberIds) {
+  Map<String, double> getMemberMealTotals(List<String> memberIds, {bool isDemo = false}) {
     final totals = <String, double>{};
     for (final id in memberIds) {
       totals[id] = 0.0;
     }
 
-    // Accumulate recorded meals
+    // Accumulate actual recorded meals (starts cleanly at 0.0)
     for (final m in _meals) {
       totals[m.memberId] = (totals[m.memberId] ?? 0.0) + m.dailyTotal;
     }
 
-    // If initial seeds have monthly baseline, blend them nicely
-    final defaults = MockSeedService.getMonthlyMemberMealTotals();
-    for (final id in memberIds) {
-      if ((totals[id] ?? 0) < (defaults[id] ?? 0)) {
-        totals[id] = defaults[id] ?? (totals[id] ?? 0);
+    // Only apply sample baseline if explicitly operating in sample demo mess
+    if (isDemo) {
+      final defaults = MockSeedService.getMonthlyMemberMealTotals();
+      for (final id in memberIds) {
+        if ((totals[id] ?? 0) < (defaults[id] ?? 0)) {
+          totals[id] = defaults[id] ?? (totals[id] ?? 0);
+        }
       }
     }
 
     return totals;
   }
 
-  double getTotalMessMeals(List<String> memberIds) {
-    final totals = getMemberMealTotals(memberIds);
+  double getTotalMessMeals(List<String> memberIds, {bool isDemo = false}) {
+    final totals = getMemberMealTotals(memberIds, isDemo: isDemo);
     double sum = 0.0;
     for (final count in totals.values) {
       sum += count;
     }
     return sum;
+  }
+
+  void clearMeals() {
+    _meals = [];
+  }
+
+  Future<void> clearMealsCache(String cycleId) async {
+    _meals = [];
+    await _prefs.remove('${_keyMeals}_$cycleId');
   }
 
   Future<void> _saveMealsToCache(String cycleId) async {

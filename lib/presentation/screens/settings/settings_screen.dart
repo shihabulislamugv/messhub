@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/locale_provider.dart';
 import '../../providers/mess_provider.dart';
 import '../auth/login_screen.dart';
+import '../onboarding/create_mess_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -97,8 +98,63 @@ class SettingsScreen extends StatelessWidget {
                 ListTile(
                   leading: const Icon(Icons.apartment_rounded, color: AppColors.secondary),
                   title: const Text('Mess Name'),
-                  subtitle: Text(messProvider.currentMess?.name ?? 'Swapno Neer'),
+                  subtitle: Text(messProvider.currentMess?.name ?? 'My Mess'),
+                  trailing: Text(
+                    messProvider.currentMess?.inviteCode ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primary),
+                  ),
+                ),
+                const Divider(color: AppColors.divider, height: 1),
+                ListTile(
+                  leading: const Icon(Icons.add_business_rounded, color: AppColors.primary),
+                  title: const Text('Create New Mess (নতুন মেস)'),
+                  subtitle: const Text('Start fresh with 0 counts'),
                   trailing: const Icon(Icons.chevron_right, size: 20, color: AppColors.textTertiary),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CreateMessScreen()),
+                    );
+                  },
+                ),
+                const Divider(color: AppColors.divider, height: 1),
+                ListTile(
+                  leading: const Icon(Icons.restart_alt_rounded, color: AppColors.negative),
+                  title: const Text('Reset All Counts to 0 (সব ০ থেকে)'),
+                  subtitle: const Text('Clear sample meals, bazar & bills'),
+                  trailing: const Icon(Icons.chevron_right, size: 20, color: AppColors.textTertiary),
+                  onTap: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: const Text('Reset to 0?'),
+                        content: const Text(
+                          'This will clear all meals, bazar, and bills so all counters start clean at 0. You will enter your real records manually.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Cancel'),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.negative),
+                            onPressed: () async {
+                              Navigator.pop(ctx);
+                              if (user != null) {
+                                await messProvider.resetCurrentMessToZero(user: user);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('All counters reset to 0! Ready for real entries.')),
+                                  );
+                                }
+                              }
+                            },
+                            child: const Text('Reset to 0'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

@@ -23,7 +23,8 @@ class ExpenseRepository {
       } catch (_) {}
     }
 
-    if (_expenses.isEmpty) {
+    final isDemoMess = messId == MockSeedService.sampleMess.id;
+    if (_expenses.isEmpty && isDemoMess) {
       _expenses = MockSeedService.getInitialExpenses();
       await _saveExpensesToCache(cycleId);
     }
@@ -153,6 +154,15 @@ class ExpenseRepository {
       list.addAll(exp.bazarItems);
     }
     return list;
+  }
+
+  void clearExpenses() {
+    _expenses = [];
+  }
+
+  Future<void> clearExpensesCache(String cycleId) async {
+    _expenses = [];
+    await _prefs.remove('${_keyExpenses}_$cycleId');
   }
 
   Future<void> _saveExpensesToCache(String cycleId) async {

@@ -32,7 +32,7 @@ class MessRepository {
     }
   }
 
-  Future<void> initMessData(String userId) async {
+  Future<void> initMessData(String userId, {bool allowDemoFallback = true}) async {
     final cachedMess = _prefs.getString(_keyCurrentMess);
     if (cachedMess != null) {
       try {
@@ -40,7 +40,7 @@ class MessRepository {
       } catch (_) {}
     }
 
-    if (_currentMess == null) {
+    if (_currentMess == null && allowDemoFallback) {
       _currentMess = MockSeedService.sampleMess;
       await _prefs.setString(_keyCurrentMess, jsonEncode(_currentMess!.toJson()));
     }
@@ -52,7 +52,7 @@ class MessRepository {
         _members = list.map((m) => MessMember.fromJson(m)).toList();
       } catch (_) {}
     }
-    if (_members.isEmpty) {
+    if (_members.isEmpty && _currentMess?.id == MockSeedService.sampleMess.id) {
       _members = List.from(MockSeedService.sampleMembers);
       await _saveMembersToCache();
     }
@@ -64,7 +64,7 @@ class MessRepository {
         _cycles = list.map((c) => MonthlyCycle.fromJson(c)).toList();
       } catch (_) {}
     }
-    if (_cycles.isEmpty) {
+    if (_cycles.isEmpty && _currentMess?.id == MockSeedService.sampleMess.id) {
       _cycles = [MockSeedService.currentCycle];
       await _saveCyclesToCache();
     }
@@ -107,6 +107,8 @@ class MessRepository {
     required int cycleStartDay,
     String? description,
     required String creatorId,
+    String? creatorName,
+    String? creatorEmail,
   }) async {
     final inviteCode = _generateInviteCode();
     final newMess = Mess(
@@ -123,7 +125,7 @@ class MessRepository {
     _currentMess = newMess;
     await _prefs.setString(_keyCurrentMess, jsonEncode(newMess.toJson()));
 
-    // Create admin member
+    // Create admin member (Only creator initially - 0 other members)
     _members = [
       MessMember(
         id: 'mem_${DateTime.now().millisecondsSinceEpoch}',
@@ -131,6 +133,8 @@ class MessRepository {
         userId: creatorId,
         role: MemberRole.admin,
         joinedAt: DateTime.now(),
+        userName: creatorName ?? 'Manager',
+        userEmail: creatorEmail ?? '',
       ),
     ];
     await _saveMembersToCache();
@@ -270,6 +274,15 @@ class MessRepository {
 
   Future<void> _saveMembersToCache() async {
     await _prefs.setString(_keyMembers, jsonEncode(_members.map((m) => m.toJson()).toList()));
+  }
+
+  Future<void> clearAllData() async {
+    _currentMess = null;
+    _members = [];
+    _cycles = [];
+    await _prefs.remove(_keyCurrentMess);
+    await _prefs.remove(_keyMembers);
+    await _prefs.remove(_keyCycles);
   }
 
   Future<void> _saveCyclesToCache() async {

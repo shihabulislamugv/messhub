@@ -22,7 +22,8 @@ class SettlementRepository {
       } catch (_) {}
     }
 
-    if (_records.isEmpty) {
+    final isDemoMess = messId == MockSeedService.sampleMess.id;
+    if (_records.isEmpty && isDemoMess) {
       _records = MockSeedService.getInitialSettlements();
       await _saveSettlementsToCache(cycleId);
     }
@@ -103,6 +104,15 @@ class SettlementRepository {
     }
 
     return map;
+  }
+
+  void clearSettlements() {
+    _records = [];
+  }
+
+  Future<void> clearSettlementsCache(String cycleId) async {
+    _records = [];
+    await _prefs.remove('${_keySettlements}_$cycleId');
   }
 
   Future<void> _saveSettlementsToCache(String cycleId) async {

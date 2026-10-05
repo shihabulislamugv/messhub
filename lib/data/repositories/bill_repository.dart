@@ -23,7 +23,8 @@ class BillRepository {
       } catch (_) {}
     }
 
-    if (_bills.isEmpty) {
+    final isDemoMess = messId == MockSeedService.sampleMess.id;
+    if (_bills.isEmpty && isDemoMess) {
       _bills = MockSeedService.getInitialBills();
       await _saveBillsToCache(cycleId);
     }
@@ -140,6 +141,15 @@ class BillRepository {
         await SupabaseConfig.client?.from('bills').delete().eq('id', billId);
       } catch (_) {}
     }
+  }
+
+  void clearBills() {
+    _bills = [];
+  }
+
+  Future<void> clearBillsCache(String cycleId) async {
+    _bills = [];
+    await _prefs.remove('${_keyBills}_$cycleId');
   }
 
   Future<void> _saveBillsToCache(String cycleId) async {
