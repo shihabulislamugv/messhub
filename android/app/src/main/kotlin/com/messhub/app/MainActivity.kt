@@ -1,4 +1,4 @@
-package com.messhub.app.messhub
+package com.messhub.app
 
 import io.flutter.embedding.android.FlutterActivity
 

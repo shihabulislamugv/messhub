@@ -1,30 +1,22 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:messhub/main.dart';
+import 'package:messhub/domain/calculations/bill_split_validator.dart';
+import 'package:messhub/domain/calculations/meal_rate_calculator.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  test('MessHub core smoke test', () {
+    final rate = MealRateCalculator.calculateMealRate(
+      totalFoodAndBazarExpense: 1000.0,
+      totalMeals: 20.0,
+    );
+    expect(rate, 50.0);
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    final res = BillSplitValidator.calculateAndValidate(
+      billType: BillType.rent,
+      splitMethod: SplitMethod.equal,
+      totalAmount: 10000.0,
+      memberIds: ['m1', 'm2'],
+    );
+    // Basha Vara must reject Equal split
+    expect(res.isValid, isFalse);
   });
 }
