@@ -154,7 +154,10 @@ class SettingsScreen extends StatelessWidget {
                 ),
                 const Divider(color: AppColors.divider, height: 1),
                 ListTile(
-                  leading: const Icon(Icons.info_outline, color: AppColors.neutral),
+                  leading: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: Image.asset('assets/images/logo.png', width: 26, height: 26, fit: BoxFit.cover),
+                  ),
                   title: Text(context.tr('version')),
                   subtitle: const Text('1.0.0 (Production Release)'),
                 ),

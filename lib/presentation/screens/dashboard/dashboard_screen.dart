@@ -42,12 +42,22 @@ class DashboardScreen extends StatelessWidget {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(7),
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: AppColors.primaryContainer,
                 borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-              child: const Icon(Icons.home_work_rounded, color: AppColors.primary, size: 20),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.asset('assets/images/logo.png', fit: BoxFit.cover),
+              ),
             ),
             const SizedBox(width: 10),
             Column(

@@ -39,5 +39,5 @@ android {
 }
 
 flutter {
-    source = "../.."
+    source = "C:/messhub"
 }
