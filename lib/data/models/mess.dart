@@ -76,6 +76,9 @@ class MessMember {
     'user_id': userId,
     'role': role == MemberRole.admin ? 'ADMIN' : 'MEMBER',
     'joined_at': joinedAt.toIso8601String(),
+    'user_name': userName,
+    'user_email': userEmail,
+    'user_avatar': userAvatar,
   };
 
   factory MessMember.fromJson(Map<String, dynamic> json) => MessMember(

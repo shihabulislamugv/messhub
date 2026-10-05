@@ -99,6 +99,67 @@ class _AddBillScreenState extends State<AddBillScreen> {
     });
   }
 
+  void _showAddMemberDialog() {
+    final nameCtrl = TextEditingController();
+    final phoneCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Add Roommate / মেম্বার যোগ করুন'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: 'Roommate Name (নাম)',
+                hintText: 'e.g. Rahim / তানভীর',
+                prefixIcon: Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneCtrl,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Phone / Details (ঐচ্ছিক)',
+                hintText: '017XXXXXXXX',
+                prefixIcon: Icon(Icons.phone),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameCtrl.text.trim();
+              if (name.isEmpty) return;
+              Navigator.pop(ctx);
+              final messProvider = context.read<MessProvider>();
+              await messProvider.addMember(
+                name: name,
+                phone: phoneCtrl.text.trim().isEmpty ? null : phoneCtrl.text.trim(),
+              );
+              for (final id in messProvider.memberIds) {
+                if (!_allocationControllers.containsKey(id)) {
+                  _allocationControllers[id] = TextEditingController();
+                }
+              }
+              setState(() {});
+            },
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+  }
+
   double _getCustomAllocationsSum() {
     double sum = 0.0;
     for (final ctrl in _allocationControllers.values) {
@@ -349,10 +410,43 @@ class _AddBillScreenState extends State<AddBillScreen> {
             const SizedBox(height: 20),
 
             // STEP 4: Member Allocations
-            Text(
-              '4. ${context.tr("member_shares")}',
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '4. ${context.tr("member_shares")} (${members.length})',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                ),
+                TextButton.icon(
+                  onPressed: _showAddMemberDialog,
+                  icon: const Icon(Icons.person_add_alt_1, size: 16),
+                  label: const Text('+ Add Roommate', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                ),
+              ],
             ),
+            if (members.length <= 1) ...[
+              Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.secondaryContainer,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: AppColors.secondary.withValues(alpha: 0.3)),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.group_add, color: AppColors.secondary, size: 20),
+                    SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'এখন মেস-এ শুধু ১ জন আছেন। বাসা ভাড়া বাকি রুমমেটদের সাথে ভাগ করতে উপরে "+ Add Roommate" বাটনে ট্যাপ করে রুমমেটদের নাম যোগ করুন।',
+                        style: TextStyle(fontSize: 12, color: AppColors.onSecondaryContainer, fontWeight: FontWeight.w500),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             const SizedBox(height: 10),
 
             if (_splitMethod == SplitMethod.equal && !isRent) ...[

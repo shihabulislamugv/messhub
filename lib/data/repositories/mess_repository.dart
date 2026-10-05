@@ -202,7 +202,7 @@ class MessRepository {
     return false;
   }
 
-  Future<void> removeMember(String memberId) async {
+  Future<bool> removeMember(String memberId) async {
     _members.removeWhere((m) => m.id == memberId || m.userId == memberId);
     await _saveMembersToCache();
 
@@ -211,6 +211,7 @@ class MessRepository {
         await SupabaseConfig.client?.from('mess_members').delete().eq('id', memberId);
       } catch (_) {}
     }
+    return true;
   }
 
   Future<MonthlyCycle> closeCurrentCycleAndStartNew() async {
@@ -262,6 +263,41 @@ class MessRepository {
     }
 
     return newCycle;
+  }
+
+  Future<MessMember> addMember({
+    required String messId,
+    required String name,
+    String? email,
+    String? phone,
+    MemberRole role = MemberRole.member,
+  }) async {
+    final rand = Random().nextInt(9999);
+    final now = DateTime.now();
+    final newUserId = 'user_${now.millisecondsSinceEpoch}_$rand';
+    final member = MessMember(
+      id: 'mem_${now.millisecondsSinceEpoch}_$rand',
+      messId: messId,
+      userId: newUserId,
+      role: role,
+      joinedAt: now,
+      userName: name,
+      userEmail: email ?? (phone != null && phone.isNotEmpty ? phone : null),
+    );
+
+    _members.add(member);
+    await _saveMembersToCache();
+
+    if (SupabaseConfig.isConfigured) {
+      final client = SupabaseConfig.client;
+      if (client != null) {
+        try {
+          await client.from('mess_members').insert(member.toJson());
+        } catch (_) {}
+      }
+    }
+
+    return member;
   }
 
   String _generateInviteCode() {

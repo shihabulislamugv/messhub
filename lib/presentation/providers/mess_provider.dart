@@ -271,6 +271,55 @@ class MessProvider extends ChangeNotifier {
     }
   }
 
+  Future<MessMember?> addMember({
+    required String name,
+    String? email,
+    String? phone,
+    MemberRole role = MemberRole.member,
+  }) async {
+    if (_messRepo.currentMess == null) return null;
+
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final member = await _messRepo.addMember(
+        messId: _messRepo.currentMess!.id,
+        name: name,
+        email: email,
+        phone: phone,
+        role: role,
+      );
+      _recalculateFinancials();
+      _isLoading = false;
+      notifyListeners();
+      return member;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> removeMember(String memberId) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final success = await _messRepo.removeMember(memberId);
+      _recalculateFinancials();
+      _isLoading = false;
+      notifyListeners();
+      return success;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> joinMess({required String inviteCode, required String userId}) async {
     _isLoading = true;
     notifyListeners();
@@ -421,12 +470,6 @@ class MessProvider extends ChangeNotifier {
   Future<void> closeMonthlyCycle() async {
     final newCycle = await _messRepo.closeCurrentCycleAndStartNew();
     selectCycle(newCycle);
-  }
-
-  Future<void> removeMember(String memberId) async {
-    await _messRepo.removeMember(memberId);
-    _recalculateFinancials();
-    notifyListeners();
   }
 
   Future<void> deleteBill(String billId, {required String cycleId}) async {
